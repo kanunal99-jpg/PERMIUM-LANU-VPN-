@@ -57,6 +57,12 @@ class LanuVpnService : VpnService() {
         return START_STICKY
     }
 
+    override fun onRevoke() {
+        Log.i(TAG, "VPN Revoked by system or user.")
+        stopVpn()
+        super.onRevoke()
+    }
+
     private fun startVpn(serverEndpoint: String, serverPort: Int) {
         Log.i(TAG, "Starting VPN Service to $serverEndpoint:$serverPort...")
         
@@ -72,7 +78,7 @@ class LanuVpnService : VpnService() {
                 .addRoute("::", 0)
                 .addDnsServer("1.1.1.1")
                 .addDnsServer("2606:4700:4700::1111")
-                .setMtu(1420)
+                .setMtu(1280)
 
             runBlocking {
                 val excludedApps = repository.getExcludedAppsSync()

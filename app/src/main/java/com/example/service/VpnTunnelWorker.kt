@@ -48,6 +48,7 @@ class VpnTunnelWorker(
             // Start Ingress thread (Server -> Device)
             val ingressThread = Thread {
                 val packet = ByteBuffer.allocate(MAX_PACKET_SIZE)
+                var lastKeepAlive = System.currentTimeMillis()
                 try {
                     while (isRunning) {
                         packet.clear()
@@ -55,22 +56,38 @@ class VpnTunnelWorker(
                         if (readFromServer > 0) {
                             outputStream.write(packet.array(), 0, readFromServer)
                         }
+
+                        // Send NAT Keep-alive every 20 seconds
+                        val now = System.currentTimeMillis()
+                        if (now - lastKeepAlive > 20000) {
+                            val keepAlive = ByteBuffer.allocate(1)
+                            keepAlive.put(0x00.toByte())
+                            keepAlive.flip()
+                            tunnel.write(keepAlive)
+                            lastKeepAlive = now
+                        }
                     }
                 } catch (e: Exception) {
-                    if (isRunning) Log.e(TAG, "Ingress error", e)
+                    if (isRunning) Log.e(TAG, "Ingress error, attempting to stay alive", e)
                 }
             }
             ingressThread.start()
 
             // Handle Egress in the main worker thread (Device -> Server)
             val packet = ByteBuffer.allocate(MAX_PACKET_SIZE)
-            while (isRunning) {
-                packet.clear()
-                val length = inputStream.read(packet.array())
-                if (length > 0) {
-                    packet.limit(length)
-                    tunnel.write(packet)
+            try {
+                while (isRunning) {
+                    packet.clear()
+                    val length = inputStream.read(packet.array())
+                    if (length > 0) {
+                        packet.limit(length)
+                        tunnel.write(packet)
+                    } else if (length == -1) {
+                        break // End of stream
+                    }
                 }
+            } catch (e: Exception) {
+                if (isRunning) Log.e(TAG, "Egress error", e)
             }
 
         } catch (e: Exception) {
