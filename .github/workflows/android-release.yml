@@ -65,3 +65,5 @@ jobs:
           name: PERMIUM LANU VPN v1.0.0-build.${{ github.run_number }}
           generate_release_notes: true
           files: app/build/outputs/apk/release/app-release.apk
+
+# Release verification trigger: build current main and publish APK.
