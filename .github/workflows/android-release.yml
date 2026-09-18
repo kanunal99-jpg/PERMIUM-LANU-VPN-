@@ -40,7 +40,12 @@ jobs:
           echo "KEYSTORE_PATH=$GITHUB_WORKSPACE/my-upload-key.jks" >> "$GITHUB_ENV"
 
       - name: Build release APK
-        run: ./gradlew --no-daemon :app:assembleRelease
+        run: |
+          if [ -x ./gradlew ]; then
+            ./gradlew --no-daemon :app:assembleRelease
+          else
+            gradle --no-daemon :app:assembleRelease
+          fi
 
       - name: Verify APK
         run: |
