@@ -27,7 +27,8 @@ import java.io.IOException
 class LanuVpnService : VpnService() {
 
     private var vpnInterface: ParcelFileDescriptor? = null
-    private var tunnelWorker: Thread? = null
+    private var workerInstance: VpnTunnelWorker? = null
+    private var tunnelWorkerThread: Thread? = null
     private lateinit var repository: VpnRepository
 
     companion object {
@@ -59,13 +60,10 @@ class LanuVpnService : VpnService() {
     private fun startVpn(serverEndpoint: String, serverPort: Int) {
         Log.i(TAG, "Starting VPN Service to $serverEndpoint:$serverPort...")
         
-        // Build the foreground notification
         val notification = createNotification()
         startForeground(NOTIFICATION_ID, notification)
 
         try {
-            // Future Infrastructure: Establish the TUN interface
-            // This is where real tunnel parameters (IP, routes, MTU) will be configured.
             val builder = Builder()
                 .setSession("LanuVpnTunnel")
                 .addAddress("10.0.0.2", 24)
@@ -76,13 +74,11 @@ class LanuVpnService : VpnService() {
                 .addDnsServer("2606:4700:4700::1111")
                 .setMtu(1420)
 
-            // Apply split tunneling (excluded apps)
             runBlocking {
                 val excludedApps = repository.getExcludedAppsSync()
                 excludedApps.forEach {
                     try {
                         builder.addDisallowedApplication(it.packageName)
-                        Log.d(TAG, "Excluded app: ${it.packageName}")
                     } catch (e: Exception) {
                         Log.e(TAG, "Failed to exclude app: ${it.packageName}", e)
                     }
@@ -91,12 +87,12 @@ class LanuVpnService : VpnService() {
             
             val fd = builder.establish()
             vpnInterface = fd
-            Log.i(TAG, "VPN Tunnel interface established.")
             
             if (fd != null) {
-                // Launch a background thread to handle data routing (packet loop)
-                tunnelWorker = Thread(VpnTunnelWorker(this, fd, serverEndpoint, serverPort))
-                tunnelWorker?.start()
+                workerInstance = VpnTunnelWorker(this, fd, serverEndpoint, serverPort)
+                tunnelWorkerThread = Thread(workerInstance)
+                tunnelWorkerThread?.start()
+                Log.i(TAG, "VPN Tunnel interface established and worker started.")
             }
             
         } catch (e: Exception) {
@@ -108,8 +104,11 @@ class LanuVpnService : VpnService() {
     private fun stopVpn() {
         Log.i(TAG, "Stopping VPN Service...")
         try {
-            tunnelWorker?.interrupt()
-            tunnelWorker = null
+            workerInstance?.stop()
+            tunnelWorkerThread?.interrupt()
+            tunnelWorkerThread = null
+            workerInstance = null
+            
             vpnInterface?.close()
             vpnInterface = null
         } catch (e: IOException) {

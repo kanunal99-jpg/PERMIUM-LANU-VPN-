@@ -26,15 +26,15 @@ class VpnTunnelWorker(
         private const val MAX_PACKET_SIZE = 32767
     }
 
+    @Volatile
+    private var isRunning = true
+
     override fun run() {
         Log.i(TAG, "Starting tunnel worker to $serverAddress:$serverPort")
         
         var tunnel: DatagramChannel? = null
         try {
-            // 1. Initialize the UDP socket and connect to the server
             tunnel = DatagramChannel.open()
-            
-            // Protect the socket from being routed back into the VPN tunnel itself
             if (!vpnService.protect(tunnel.socket())) {
                 throw IllegalStateException("Cannot protect tunnel socket")
             }
@@ -42,45 +42,51 @@ class VpnTunnelWorker(
             tunnel.connect(InetSocketAddress(serverAddress, serverPort))
             tunnel.configureBlocking(true)
 
-            // 2. Set up streams for the TUN interface
             val inputStream = FileInputStream(tunnelInterface.fileDescriptor)
             val outputStream = FileOutputStream(tunnelInterface.fileDescriptor)
 
-            val packet = ByteBuffer.allocate(MAX_PACKET_SIZE)
+            // Start Ingress thread (Server -> Device)
+            val ingressThread = Thread {
+                val packet = ByteBuffer.allocate(MAX_PACKET_SIZE)
+                try {
+                    while (isRunning) {
+                        packet.clear()
+                        val readFromServer = tunnel.read(packet)
+                        if (readFromServer > 0) {
+                            outputStream.write(packet.array(), 0, readFromServer)
+                        }
+                    }
+                } catch (e: Exception) {
+                    if (isRunning) Log.e(TAG, "Ingress error", e)
+                }
+            }
+            ingressThread.start()
 
-            // 3. Packet Loop
-            while (true) {
-                // Read from TUN interface (Packets outgoing from the device)
+            // Handle Egress in the main worker thread (Device -> Server)
+            val packet = ByteBuffer.allocate(MAX_PACKET_SIZE)
+            while (isRunning) {
                 packet.clear()
                 val length = inputStream.read(packet.array())
                 if (length > 0) {
                     packet.limit(length)
-                    // Write to UDP socket (Forward to VPN server)
                     tunnel.write(packet)
                 }
-
-                // Read from UDP socket (Packets incoming from the VPN server)
-                packet.clear()
-                val readFromServer = tunnel.read(packet)
-                if (readFromServer > 0) {
-                    // Write back to TUN interface (Deliver to the device)
-                    outputStream.write(packet.array(), 0, readFromServer)
-                }
-                
-                // Sleep slightly if no data to prevent CPU pinning if non-blocking
-                // Though we are in blocking mode here.
-                if (length <= 0 && readFromServer <= 0) {
-                    Thread.sleep(10)
-                }
             }
+
         } catch (e: Exception) {
-            Log.e(TAG, "Tunnel worker error", e)
+            if (isRunning) Log.e(TAG, "Tunnel worker error", e)
         } finally {
+            stop()
             try {
                 tunnel?.close()
-            } catch (e: Exception) {
-                // Ignore
-            }
+            } catch (e: Exception) { /* ignore */ }
         }
+    }
+
+    fun stop() {
+        isRunning = false
+        try {
+            tunnelInterface.close()
+        } catch (e: Exception) { /* ignore */ }
     }
 }

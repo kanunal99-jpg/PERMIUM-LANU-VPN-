@@ -99,16 +99,17 @@ object VpnConnectionManager {
       try {
         // Measure real-time latency before establishing tunnel
         val pingResult = IcmpPingUtility.ping(server.endpoint, server.port)
-        if (pingResult >= 0) {
-          // Update latency in local DB for UI persistence
-          val dao = LanuDatabase.getDatabase(context).lanuDao()
-          dao.updateServer(server.copy(latency = pingResult.toInt()))
+        if (pingResult < 0) {
+          updateInternalState(VpnState.ERROR)
+          return@launch
         }
+        
+        // Update latency in local DB for UI persistence
+        val dao = LanuDatabase.getDatabase(context).lanuDao()
+        dao.updateServer(server.copy(latency = pingResult.toInt()))
 
         // Simulate real secure handshake & tunnel establishment
-        delay(1200)
-        
-        val realIp = IpApiService.fetchCurrentIp()
+        delay(800)
         
         val intent = Intent(context, LanuVpnService::class.java).apply {
           action = LanuVpnService.ACTION_CONNECT
@@ -122,7 +123,7 @@ object VpnConnectionManager {
         startTimer()
 
         _stats.value = _stats.value.copy(
-          currentIp = server.endpoint, // Verified VPN server IP routing
+          currentIp = server.endpoint,
           serverIp = server.endpoint
         )
       } catch (e: Exception) {

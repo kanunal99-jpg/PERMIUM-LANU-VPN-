@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.AltRoute
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,7 +21,7 @@ sealed class Screen(val route: String, val title: String, val icon: androidx.com
   object SpeedTest : Screen("speed_test", "Speed", Icons.Default.Speed)
   object Settings : Screen("settings", "Settings", Icons.Default.Settings)
   object Privacy : Screen("privacy", "Privacy", Icons.Default.Security)
-  object SplitTunneling : Screen("split_tunneling", "Split Tunneling", Icons.Default.AltRoute)
+  object SplitTunneling : Screen("split_tunneling", "Split Tunneling", Icons.AutoMirrored.Filled.AltRoute)
 }
 
 @Composable
