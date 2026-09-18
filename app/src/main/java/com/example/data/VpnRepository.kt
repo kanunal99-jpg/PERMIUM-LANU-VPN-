@@ -18,79 +18,25 @@ class VpnRepository(private val dao: LanuDao) {
         country = "Germany",
         city = "Frankfurt",
         hostname = "de1.lanuvpn.net",
-        publicKey = "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v=",
-        endpoint = "185.220.101.5",
+        publicKey = "PASTE_YOUR_SERVER_PUBLIC_KEY_HERE",
+        privateKey = "PASTE_YOUR_CLIENT_PRIVATE_KEY_HERE",
+        address = "10.0.0.2/32",
+        endpoint = "1.2.3.4",
         port = 51820,
         protocol = "WireGuard",
-        status = "ONLINE",
-        latency = 24,
-        load = 32,
+        status = "CONFIG_REQUIRED",
+        latency = -1,
+        load = 0,
         isFavorite = true,
         isLastUsed = true
-      ),
-      ServerEntity(
-        id = "nl_amsterdam_1",
-        country = "Netherlands",
-        city = "Amsterdam",
-        hostname = "nl1.lanuvpn.net",
-        publicKey = "b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2a=",
-        endpoint = "194.154.20.18",
-        port = 51820,
-        protocol = "WireGuard",
-        status = "ONLINE",
-        latency = 31,
-        load = 45,
-        isFavorite = false,
-        isLastUsed = false
-      ),
-      ServerEntity(
-        id = "tr_istanbul_1",
-        country = "Turkey",
-        city = "Istanbul",
-        hostname = "tr1.lanuvpn.net",
-        publicKey = "c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2a3b=",
-        endpoint = "185.130.44.12",
-        port = 51820,
-        protocol = "WireGuard",
-        status = "ONLINE",
-        latency = 48,
-        load = 28,
-        isFavorite = true,
-        isLastUsed = false
-      ),
-      ServerEntity(
-        id = "us_ny_1",
-        country = "United States",
-        city = "New York",
-        hostname = "us1.lanuvpn.net",
-        publicKey = "d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2a3b4c=",
-        endpoint = "45.33.32.156",
-        port = 51820,
-        protocol = "WireGuard",
-        status = "ONLINE",
-        latency = 95,
-        load = 60,
-        isFavorite = false,
-        isLastUsed = false
-      ),
-      ServerEntity(
-        id = "uk_london_1",
-        country = "United Kingdom",
-        city = "London",
-        hostname = "uk1.lanuvpn.net",
-        publicKey = "e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2a3b4c5d=",
-        endpoint = "178.62.204.99",
-        port = 51820,
-        protocol = "OpenVPN",
-        status = "ONLINE",
-        latency = 38,
-        load = 40,
-        isFavorite = false,
-        isLastUsed = false
       )
     )
     dao.insertServers(defaults)
     dao.saveSettings(SettingsEntity())
+  }
+
+  suspend fun getLastUsedServerSync(): ServerEntity? {
+    return dao.getLastUsedServer()
   }
 
   suspend fun updateServer(server: ServerEntity) {

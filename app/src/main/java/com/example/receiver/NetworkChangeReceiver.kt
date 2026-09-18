@@ -36,11 +36,22 @@ class NetworkChangeReceiver : BroadcastReceiver() {
       kotlinx.coroutines.MainScope().launch {
         val settings = repository.getSettingsSync()
         if (settings?.autoConnect == true && !VpnStateManager.isConnected) {
-          Log.i(TAG, "Auto-connect is enabled. Starting VPN.")
-          val intentService = Intent(context, com.example.service.LanuVpnService::class.java).apply {
-            action = com.example.service.LanuVpnService.ACTION_CONNECT
+          val lastServer = repository.getLastUsedServerSync()
+          if (lastServer != null && lastServer.privateKey.isNotBlank() && lastServer.publicKey.isNotBlank()) {
+            Log.i(TAG, "Auto-connect is enabled. Starting VPN with server: ${lastServer.country}")
+            val intentService = Intent(context, com.example.service.LanuVpnService::class.java).apply {
+              action = com.example.service.LanuVpnService.ACTION_CONNECT
+              putExtra("server_id", lastServer.id)
+              putExtra("server_endpoint", lastServer.endpoint)
+              putExtra("server_port", lastServer.port)
+              putExtra("server_public_key", lastServer.publicKey)
+              putExtra("client_private_key", lastServer.privateKey)
+              putExtra("client_address", lastServer.address)
+            }
+            androidx.core.content.ContextCompat.startForegroundService(context, intentService)
+          } else {
+            Log.w(TAG, "Auto-connect failed: No valid last used server or missing keys.")
           }
-          androidx.core.content.ContextCompat.startForegroundService(context, intentService)
         }
       }
     }

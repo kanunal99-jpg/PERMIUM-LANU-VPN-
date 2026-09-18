@@ -31,8 +31,8 @@ data class ConnectionStats(
   val durationSeconds: Long = 0,
   val bytesIn: Long = 0,
   val bytesOut: Long = 0,
-  val currentIp: String = "192.168.1.50",
-  val serverIp: String = "185.220.101.5"
+  val currentIp: String = "Unknown",
+  val serverIp: String = "Unknown"
 )
 
 object VpnConnectionManager {
@@ -68,14 +68,17 @@ object VpnConnectionManager {
       if (server != null) {
         scope.launch {
           updateInternalState(VpnState.RECONNECTING)
-          delay(800)
           val intent = Intent(context, LanuVpnService::class.java).apply {
             action = LanuVpnService.ACTION_CONNECT
+            putExtra("server_id", server.id)
             putExtra("server_endpoint", server.endpoint)
             putExtra("server_port", server.port)
+            putExtra("server_public_key", server.publicKey)
+            putExtra("client_private_key", server.privateKey)
+            putExtra("client_address", server.address)
           }
           ContextCompat.startForegroundService(context, intent)
-          updateInternalState(VpnState.CONNECTED)
+          // CONNECTED will be set by the service after verification
         }
       }
     }
@@ -89,10 +92,11 @@ object VpnConnectionManager {
     }
   }
 
-  fun updateState(state: VpnState) {
+  fun updateState(state: VpnState, vpnIp: String? = null) {
     updateInternalState(state)
     if (state == VpnState.CONNECTED) {
         _isConnected.value = true
+        vpnIp?.let { _stats.value = _stats.value.copy(currentIp = it) }
         startTimer()
     } else if (state == VpnState.DISCONNECTED || state == VpnState.ERROR) {
         _isConnected.value = false
@@ -112,11 +116,12 @@ object VpnConnectionManager {
     
     updateInternalState(VpnState.CONNECTING)
     _currentServer.value = server
+    _stats.value = _stats.value.copy(serverIp = server.endpoint)
     
     scope.launch {
       try {
         // Measure real-time latency before establishing tunnel
-        val pingResult = IcmpPingUtility.ping(server.endpoint, server.port)
+        val pingResult = IcmpPingUtility.ping(server.endpoint)
         if (pingResult < 0) {
           updateInternalState(VpnState.ERROR)
           return@launch

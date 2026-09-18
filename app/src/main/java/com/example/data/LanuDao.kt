@@ -30,6 +30,9 @@ interface LanuDao {
   @Query("UPDATE servers SET isLastUsed = 1 WHERE id = :serverId")
   suspend fun setLastUsed(serverId: String)
 
+  @Query("SELECT * FROM servers WHERE isLastUsed = 1 LIMIT 1")
+  suspend fun getLastUsedServer(): ServerEntity?
+
   @Query("SELECT * FROM settings WHERE id = 1")
   fun getSettings(): Flow<SettingsEntity?>
 

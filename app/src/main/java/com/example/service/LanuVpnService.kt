@@ -103,18 +103,27 @@ class LanuVpnService : VpnService() {
                 backend?.setState(tunnel, Tunnel.State.UP, config)
                 
                 // 3. Verify Handshake / Connection
-                delay(2000)
-                if (tunnel.getState() == Tunnel.State.UP) {
-                    Log.i(TAG, "WireGuard Tunnel UP, verifying traffic...")
+                var handshakeVerified = false
+                for (i in 1..10) {
+                    delay(1000)
+                    val stats = backend?.getStatistics(tunnel)
+                    if (stats != null && stats.totalRx() > 0) {
+                        handshakeVerified = true
+                        break
+                    }
+                }
+
+                if (handshakeVerified) {
+                    Log.i(TAG, "WireGuard Tunnel Handshake Success, verifying traffic...")
                     
                     // Real verification: Fetch IP through tunnel
                     val vpnIp = IpApiService.fetchCurrentIp()
                     Log.i(TAG, "Current IP after VPN: $vpnIp")
                     
-                    VpnConnectionManager.updateState(VpnState.CONNECTED)
+                    VpnConnectionManager.updateState(VpnState.CONNECTED, vpnIp)
                     startStatsCollection()
                 } else {
-                    Log.e(TAG, "Tunnel failed to reach UP state")
+                    Log.e(TAG, "Handshake failed after 10s")
                     VpnConnectionManager.updateState(VpnState.ERROR)
                     stopVpn()
                 }

@@ -10,8 +10,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import com.example.data.LanuDatabase
-import com.example.data.PingUtility
-import com.example.data.ServerRepository
+import com.example.data.VpnRepository
 import com.example.manager.AutoConnectManager
 import com.example.manager.VpnConnectionManager
 import com.example.manager.VpnStateManager
@@ -28,14 +27,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-  private lateinit var repository: ServerRepository
+  private lateinit var repository: VpnRepository
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
 
     val database = LanuDatabase.getDatabase(applicationContext)
-    repository = ServerRepository(database.lanuDao())
+    repository = VpnRepository.getInstance(applicationContext)
 
     val pingWorkRequest = PeriodicWorkRequestBuilder<ServerPingWorker>(15, TimeUnit.MINUTES).build()
     WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
@@ -92,7 +91,7 @@ class MainActivity : ComponentActivity() {
           },
           onRefreshLatency = {
             scope.launch {
-              PingUtility.refreshAllServerLatencies(repository, servers)
+              repository.refreshServerHealth(applicationContext)
             }
           }
         )

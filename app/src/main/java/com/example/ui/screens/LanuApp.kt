@@ -13,7 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.data.ServerEntity
-import com.example.data.ServerRepository
+import com.example.data.VpnRepository
 
 sealed class Screen(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
   object Home : Screen("home", "Home", Icons.Default.VpnKey)
@@ -26,7 +26,7 @@ sealed class Screen(val route: String, val title: String, val icon: androidx.com
 
 @Composable
 fun LanuApp(
-  repository: ServerRepository,
+  repository: VpnRepository,
   servers: List<ServerEntity>,
   selectedServer: ServerEntity?,
   onServerSelected: (ServerEntity) -> Unit,

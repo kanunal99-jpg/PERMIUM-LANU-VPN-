@@ -18,7 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import com.example.data.ExcludedAppEntity
-import com.example.data.ServerRepository
+import com.example.data.VpnRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -27,7 +27,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun SplitTunnelingScreen(
     onNavigateBack: () -> Unit,
-    repository: ServerRepository
+    repository: VpnRepository
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()

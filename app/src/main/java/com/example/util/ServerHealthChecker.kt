@@ -4,9 +4,6 @@ import android.content.Context
 import com.example.data.LanuDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.random.Random
 
 object ServerHealthChecker {
 
@@ -18,7 +15,7 @@ object ServerHealthChecker {
         val servers = dao.getAllServersList()
 
         for (server in servers) {
-          val latency = IcmpPingUtility.ping(server.endpoint, server.port)
+          val latency = IcmpPingUtility.ping(server.endpoint)
           val status: String
           val finalLatency: Int
 
@@ -30,17 +27,13 @@ object ServerHealthChecker {
               else -> "OFFLINE"
             }
           } else {
-            finalLatency = 999
+            finalLatency = -1
             status = "OFFLINE"
           }
 
-          val loadDelta = Random.nextInt(-4, 5)
-          val newLoad = max(5, min(98, server.load + loadDelta))
-
           val updatedServer = server.copy(
             status = status,
-            latency = finalLatency,
-            load = newLoad
+            latency = finalLatency
           )
           dao.updateServer(updatedServer)
         }
