@@ -1,6 +1,6 @@
 {
-  "name": "LANU VPN",
-  "description": "Professional real VPN application for Android with high-performance WireGuard/OpenVPN architecture, secure tunneling, kill switch, and zero log policy.",
+  "name": "PERMIUM LANU VPN",
+  "description": "Professional real VPN application for Android with high-performance WireGuard architecture, secure tunneling, and real-time handshake verification.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

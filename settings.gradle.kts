@@ -23,6 +23,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "LANU VPN"
+rootProject.name = "PERMIUM LANU VPN"
 
 include(":app")

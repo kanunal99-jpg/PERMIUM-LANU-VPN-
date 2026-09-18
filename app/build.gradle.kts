@@ -11,7 +11,7 @@ android {
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
   defaultConfig {
-    applicationId = "com.example"
+    applicationId = "com.aistudio.lanuvpn.fhkqwe"
     minSdk = 26
     targetSdk = 34
     versionCode = 1
