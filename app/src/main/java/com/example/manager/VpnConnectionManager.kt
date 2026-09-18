@@ -89,6 +89,24 @@ object VpnConnectionManager {
     }
   }
 
+  fun updateState(state: VpnState) {
+    updateInternalState(state)
+    if (state == VpnState.CONNECTED) {
+        _isConnected.value = true
+        startTimer()
+    } else if (state == VpnState.DISCONNECTED || state == VpnState.ERROR) {
+        _isConnected.value = false
+        stopTimer()
+    }
+  }
+
+  fun updateStats(bytesIn: Long, bytesOut: Long) {
+    _stats.value = _stats.value.copy(
+        bytesIn = bytesIn,
+        bytesOut = bytesOut
+    )
+  }
+
   fun connect(context: Context, server: ServerEntity) {
     if (_vpnState.value == VpnState.CONNECTED || _vpnState.value == VpnState.CONNECTING) return
     
@@ -108,24 +126,19 @@ object VpnConnectionManager {
         val dao = LanuDatabase.getDatabase(context).lanuDao()
         dao.updateServer(server.copy(latency = pingResult.toInt()))
 
-        // Simulate real secure handshake & tunnel establishment
-        delay(800)
-        
         val intent = Intent(context, LanuVpnService::class.java).apply {
           action = LanuVpnService.ACTION_CONNECT
+          putExtra("server_id", server.id)
           putExtra("server_endpoint", server.endpoint)
           putExtra("server_port", server.port)
+          putExtra("server_public_key", server.publicKey)
+          putExtra("client_private_key", server.privateKey)
+          putExtra("client_address", server.address)
         }
         ContextCompat.startForegroundService(context, intent)
         
-        updateInternalState(VpnState.CONNECTED)
-        _isConnected.value = true
-        startTimer()
-
-        _stats.value = _stats.value.copy(
-          currentIp = server.endpoint,
-          serverIp = server.endpoint
-        )
+        // Note: updateInternalState(VpnState.CONNECTED) will be called by the service 
+        // after successful handshake verification.
       } catch (e: Exception) {
         updateInternalState(VpnState.ERROR)
         _isConnected.value = false
@@ -143,13 +156,14 @@ object VpnConnectionManager {
         action = LanuVpnService.ACTION_DISCONNECT
       }
       context.startService(intent)
-      delay(600)
       
       stopTimer()
       updateInternalState(VpnState.DISCONNECTED)
       _isConnected.value = false
-      val originalIp = IpApiService.fetchCurrentIp()
-      _stats.value = _stats.value.copy(currentIp = originalIp, durationSeconds = 0)
+      scope.launch {
+        val currentIp = IpApiService.fetchCurrentIp()
+        _stats.value = _stats.value.copy(currentIp = currentIp, durationSeconds = 0)
+      }
     }
   }
 
@@ -160,10 +174,9 @@ object VpnConnectionManager {
       while (isActive && _vpnState.value == VpnState.CONNECTED) {
         delay(1000)
         val elapsed = (System.currentTimeMillis() - startTime) / 1000
+        // TODO: Get real traffic stats from VpnService
         _stats.value = _stats.value.copy(
-          durationSeconds = elapsed,
-          bytesIn = _stats.value.bytesIn + 4096,
-          bytesOut = _stats.value.bytesOut + 2048
+          durationSeconds = elapsed
         )
       }
     }

@@ -13,7 +13,7 @@ android {
   defaultConfig {
     applicationId = "com.example"
     minSdk = 26
-    targetSdk = 36
+    targetSdk = 34
     versionCode = 1
     versionName = "1.0"
 
@@ -46,8 +46,8 @@ android {
     debug { signingConfig = signingConfigs.getByName("debugConfig") }
   }
   compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
     isCoreLibraryDesugaringEnabled = true
   }
   buildFeatures {
@@ -89,7 +89,8 @@ dependencies {
   implementation(libs.androidx.core.ktx)
   implementation("androidx.datastore:datastore-preferences:1.1.1")
   implementation("androidx.work:work-runtime-ktx:2.9.0")
-  compileOnly("com.wireguard.android:tunnel:1.0.20230706")
+  implementation(libs.wireguard.tunnel)
+  implementation(libs.kotlinx.serialization.json)
   coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
   implementation(libs.androidx.lifecycle.runtime.compose)
   implementation(libs.androidx.lifecycle.runtime.ktx)

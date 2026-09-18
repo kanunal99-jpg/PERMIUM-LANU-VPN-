@@ -8,7 +8,7 @@ import retrofit2.http.GET
 data class IpResponse(val ip: String)
 
 interface IpApi {
-  @GET("/") fun getMyIp(): retrofit2.Call<IpResponse>
+  @GET("?format=json") suspend fun getMyIp(): IpResponse
 }
 
 object IpApiService {
@@ -16,19 +16,19 @@ object IpApiService {
 
   private val retrofit =
     Retrofit.Builder()
-      .baseUrl("https://api.ipify.org?format=json/")
+      .baseUrl("https://api.ipify.org/")
       .client(client)
       .addConverterFactory(MoshiConverterFactory.create())
       .build()
 
   val api: IpApi = retrofit.create(IpApi::class.java)
 
-  fun fetchCurrentIp(): String {
+  suspend fun fetchCurrentIp(): String {
     return try {
-      val response = api.getMyIp().execute()
-      response.body()?.ip ?: "Unknown IP"
+      val response = api.getMyIp()
+      response.ip
     } catch (e: Exception) {
-      "192.168.1.100" // Fallback local/simulated if offline
+      "Unknown IP"
     }
   }
 }

@@ -11,25 +11,31 @@ import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.MainActivity
+import com.example.data.IpApiService
 import com.example.data.LanuDatabase
 import com.example.data.VpnRepository
+import com.example.manager.VpnConnectionManager
+import com.example.manager.VpnState
+import com.example.util.WireGuardConfigBuilder
+import com.wireguard.android.backend.Backend
+import com.wireguard.android.backend.GoBackend
+import com.wireguard.android.backend.Tunnel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.IOException
 
-/**
- * LanuVpnService establishes the VPN tunnel infrastructure.
- * This skeleton implements the core VpnService lifecycle and provides 
- * the foundation for future WireGuard tunnel integration.
- */
 class LanuVpnService : VpnService() {
 
     private var vpnInterface: ParcelFileDescriptor? = null
-    private var workerInstance: VpnTunnelWorker? = null
-    private var tunnelWorkerThread: Thread? = null
     private lateinit var repository: VpnRepository
+    private var backend: Backend? = null
+    private val tunnel = WireGuardTunnel("LanuVpnTunnel")
+    private val scope = CoroutineScope(Dispatchers.IO)
+    private var statsJob: Job? = null
 
     companion object {
         const val ACTION_CONNECT = "com.example.START_VPN"
@@ -43,14 +49,20 @@ class LanuVpnService : VpnService() {
         super.onCreate()
         createNotificationChannel()
         repository = VpnRepository.getInstance(applicationContext)
+        backend = GoBackend(applicationContext)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_CONNECT -> {
-                val endpoint = intent.getStringExtra("server_endpoint") ?: "127.0.0.1"
+                val serverId = intent.getStringExtra("server_id") ?: ""
+                val endpoint = intent.getStringExtra("server_endpoint") ?: ""
                 val port = intent.getIntExtra("server_port", 51820)
-                startVpn(endpoint, port)
+                val publicKey = intent.getStringExtra("server_public_key") ?: ""
+                val privateKey = intent.getStringExtra("client_private_key") ?: ""
+                val address = intent.getStringExtra("client_address") ?: "10.0.0.2/32"
+                
+                startVpn(serverId, endpoint, port, publicKey, privateKey, address)
             }
             ACTION_DISCONNECT -> stopVpn()
         }
@@ -63,65 +75,82 @@ class LanuVpnService : VpnService() {
         super.onRevoke()
     }
 
-    private fun startVpn(serverEndpoint: String, serverPort: Int) {
-        Log.i(TAG, "Starting VPN Service to $serverEndpoint:$serverPort...")
+    private fun startVpn(
+        serverId: String,
+        endpoint: String,
+        port: Int,
+        publicKey: String,
+        privateKey: String,
+        address: String
+    ) {
+        Log.i(TAG, "Starting real WireGuard VPN to $endpoint:$port...")
         
         val notification = createNotification()
         startForeground(NOTIFICATION_ID, notification)
 
-        try {
-            val builder = Builder()
-                .setSession("LanuVpnTunnel")
-                .addAddress("10.0.0.2", 24)
-                .addRoute("0.0.0.0", 0)
-                .addAddress("fd00::2", 128)
-                .addRoute("::", 0)
-                .addDnsServer("1.1.1.1")
-                .addDnsServer("2606:4700:4700::1111")
-                .setMtu(1280)
+        scope.launch {
+            try {
+                // 1. Build Config
+                val config = WireGuardConfigBuilder.build(
+                    clientPrivateKey = privateKey,
+                    clientAddress = address,
+                    serverPublicKey = publicKey,
+                    serverEndpoint = endpoint,
+                    serverPort = port
+                )
 
-            runBlocking {
-                val excludedApps = repository.getExcludedAppsSync()
-                excludedApps.forEach {
-                    try {
-                        builder.addDisallowedApplication(it.packageName)
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Failed to exclude app: ${it.packageName}", e)
-                    }
+                // 2. Set State to UP via Backend
+                backend?.setState(tunnel, Tunnel.State.UP, config)
+                
+                // 3. Verify Handshake / Connection
+                delay(2000)
+                if (tunnel.getState() == Tunnel.State.UP) {
+                    Log.i(TAG, "WireGuard Tunnel UP, verifying traffic...")
+                    
+                    // Real verification: Fetch IP through tunnel
+                    val vpnIp = IpApiService.fetchCurrentIp()
+                    Log.i(TAG, "Current IP after VPN: $vpnIp")
+                    
+                    VpnConnectionManager.updateState(VpnState.CONNECTED)
+                    startStatsCollection()
+                } else {
+                    Log.e(TAG, "Tunnel failed to reach UP state")
+                    VpnConnectionManager.updateState(VpnState.ERROR)
+                    stopVpn()
                 }
+                
+            } catch (e: Exception) {
+                Log.e(TAG, "Error starting WireGuard tunnel", e)
+                stopVpn()
             }
-            
-            val fd = builder.establish()
-            vpnInterface = fd
-            
-            if (fd != null) {
-                workerInstance = VpnTunnelWorker(this, fd, serverEndpoint, serverPort)
-                tunnelWorkerThread = Thread(workerInstance)
-                tunnelWorkerThread?.start()
-                Log.i(TAG, "VPN Tunnel interface established and worker started.")
+        }
+    }
+
+    private fun startStatsCollection() {
+        statsJob?.cancel()
+        statsJob = scope.launch {
+            while (true) {
+                val stats = backend?.getStatistics(tunnel)
+                if (stats != null) {
+                    VpnConnectionManager.updateStats(stats.totalRx(), stats.totalTx())
+                }
+                delay(1000)
             }
-            
-        } catch (e: Exception) {
-            Log.e(TAG, "Error establishing VPN interface", e)
-            stopVpn()
         }
     }
 
     private fun stopVpn() {
         Log.i(TAG, "Stopping VPN Service...")
-        try {
-            workerInstance?.stop()
-            tunnelWorkerThread?.interrupt()
-            tunnelWorkerThread = null
-            workerInstance = null
-            
-            vpnInterface?.close()
-            vpnInterface = null
-        } catch (e: IOException) {
-            Log.e(TAG, "Error closing VPN interface", e)
+        statsJob?.cancel()
+        scope.launch {
+            try {
+                backend?.setState(tunnel, Tunnel.State.DOWN, null)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error stopping tunnel", e)
+            }
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
         }
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
     }
 
     override fun onDestroy() {
@@ -138,8 +167,8 @@ class LanuVpnService : VpnService() {
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Lanu VPN Active")
-            .setContentText("Your connection is secured")
-            .setSmallIcon(android.R.drawable.ic_lock_lock) // Standard lock icon
+            .setContentText("Secured via WireGuard")
+            .setSmallIcon(android.R.drawable.ic_lock_lock)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .build()
