@@ -71,6 +71,8 @@ object VpnConnectionManager {
           delay(800)
           val intent = Intent(context, LanuVpnService::class.java).apply {
             action = LanuVpnService.ACTION_CONNECT
+            putExtra("server_endpoint", server.endpoint)
+            putExtra("server_port", server.port)
           }
           ContextCompat.startForegroundService(context, intent)
           updateInternalState(VpnState.CONNECTED)
@@ -110,6 +112,8 @@ object VpnConnectionManager {
         
         val intent = Intent(context, LanuVpnService::class.java).apply {
           action = LanuVpnService.ACTION_CONNECT
+          putExtra("server_endpoint", server.endpoint)
+          putExtra("server_port", server.port)
         }
         ContextCompat.startForegroundService(context, intent)
         

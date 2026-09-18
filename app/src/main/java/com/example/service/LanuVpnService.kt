@@ -27,6 +27,7 @@ import java.io.IOException
 class LanuVpnService : VpnService() {
 
     private var vpnInterface: ParcelFileDescriptor? = null
+    private var tunnelWorker: Thread? = null
     private lateinit var repository: VpnRepository
 
     companion object {
@@ -45,14 +46,18 @@ class LanuVpnService : VpnService() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_CONNECT -> startVpn()
+            ACTION_CONNECT -> {
+                val endpoint = intent.getStringExtra("server_endpoint") ?: "127.0.0.1"
+                val port = intent.getIntExtra("server_port", 51820)
+                startVpn(endpoint, port)
+            }
             ACTION_DISCONNECT -> stopVpn()
         }
         return START_STICKY
     }
 
-    private fun startVpn() {
-        Log.i(TAG, "Starting VPN Service...")
+    private fun startVpn(serverEndpoint: String, serverPort: Int) {
+        Log.i(TAG, "Starting VPN Service to $serverEndpoint:$serverPort...")
         
         // Build the foreground notification
         val notification = createNotification()
@@ -84,10 +89,15 @@ class LanuVpnService : VpnService() {
                 }
             }
             
-            vpnInterface = builder.establish()
+            val fd = builder.establish()
+            vpnInterface = fd
             Log.i(TAG, "VPN Tunnel interface established.")
             
-            // TODO: Launch a background thread to handle data routing (packet loop)
+            if (fd != null) {
+                // Launch a background thread to handle data routing (packet loop)
+                tunnelWorker = Thread(VpnTunnelWorker(this, fd, serverEndpoint, serverPort))
+                tunnelWorker?.start()
+            }
             
         } catch (e: Exception) {
             Log.e(TAG, "Error establishing VPN interface", e)
@@ -98,6 +108,8 @@ class LanuVpnService : VpnService() {
     private fun stopVpn() {
         Log.i(TAG, "Stopping VPN Service...")
         try {
+            tunnelWorker?.interrupt()
+            tunnelWorker = null
             vpnInterface?.close()
             vpnInterface = null
         } catch (e: IOException) {
