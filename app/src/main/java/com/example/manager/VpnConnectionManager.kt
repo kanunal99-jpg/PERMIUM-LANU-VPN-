@@ -3,7 +3,6 @@ package com.example.manager
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.ContextCompat
-import com.example.data.IpApiService
 import com.example.data.ServerEntity
 import com.example.service.LanuVpnService
 import kotlinx.coroutines.CoroutineScope
@@ -13,7 +12,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
@@ -134,7 +132,10 @@ object VpnConnectionManager {
     }
   }
 
-  private fun stopTimer() { timerJob?.cancel(); timerJob = null }
+  private fun stopTimer() {
+    timerJob?.cancel()
+    timerJob = null
+  }
 }
 
 private fun ServerEntity.hasUsableWireGuardConfig(): Boolean =
