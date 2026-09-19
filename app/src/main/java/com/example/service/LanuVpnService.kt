@@ -11,10 +11,7 @@ import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.MainActivity
-import com.example.manager.VpnConnectionManager
-import com.example.manager.VpnState
 import com.example.data.IpApiService
-import com.example.data.LanuDatabase
 import com.example.data.VpnRepository
 import com.example.manager.VpnConnectionManager
 import com.example.manager.VpnState
@@ -27,7 +24,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.io.IOException
 
 class LanuVpnService : VpnService() {
@@ -54,7 +50,7 @@ class LanuVpnService : VpnService() {
         try {
             backend = GoBackend(applicationContext)
         } catch (e: Throwable) {
-            Log.e(TAG, "Failed to initialize GoBackend (Native WireGuard engine). This is expected on some emulators.", e)
+            Log.e(TAG, "Failed to initialize GoBackend (Native WireGuard engine).", e)
             backend = null
         }
     }
@@ -68,7 +64,7 @@ class LanuVpnService : VpnService() {
                 val publicKey = intent.getStringExtra("server_public_key") ?: ""
                 val privateKey = intent.getStringExtra("client_private_key") ?: ""
                 val address = intent.getStringExtra("client_address") ?: "10.0.0.2/32"
-                
+
                 startVpn(serverId, endpoint, port, publicKey, privateKey, address)
             }
             ACTION_DISCONNECT -> stopVpn()
@@ -91,13 +87,11 @@ class LanuVpnService : VpnService() {
         address: String
     ) {
         Log.i(TAG, "Starting VPN to $endpoint:$port...")
-        
-        val notification = createNotification()
-        startForeground(NOTIFICATION_ID, notification)
+
+        startForeground(NOTIFICATION_ID, createNotification())
 
         scope.launch {
             try {
-                // 1. Build Config
                 val config = WireGuardConfigBuilder.build(
                     clientPrivateKey = privateKey,
                     clientAddress = address,
@@ -106,37 +100,34 @@ class LanuVpnService : VpnService() {
                     serverPort = port
                 )
 
-                // 2. Set State to UP via Backend
-                backend?.setState(tunnel, Tunnel.State.UP, config)
-                
-                // 3. Verify Handshake / Connection
+                val activeBackend = backend ?: error("WireGuard backend unavailable")
+                activeBackend.setState(tunnel, Tunnel.State.UP, config)
+
                 val peerKey = com.wireguard.crypto.Key.fromBase64(publicKey)
                 var handshakeVerified = false
+
                 repeat(15) {
                     delay(1000)
-                    val peerStats = backend?.getStatistics(tunnel)?.peer(peerKey)
+                    val peerStats = activeBackend.getStatistics(tunnel).peer(peerKey)
                     if (peerStats != null && peerStats.latestHandshakeEpochMillis > 0L) {
                         handshakeVerified = true
                         return@repeat
                     }
                 }
 
-                if (handshakeVerified) {
-                    Log.i(TAG, "WireGuard Tunnel Handshake Success, verifying traffic...")
-                    
-                    // Real verification: Fetch IP through tunnel
-                    val vpnIp = IpApiService.fetchCurrentIp()
-                    require(vpnIp.isNotBlank() && vpnIp != "Unknown IP") { "Public IP verification failed" }
-                    Log.i(TAG, "Current IP after VPN: $vpnIp"
-                    
-                    VpnConnectionManager.updateState(VpnState.CONNECTED, vpnIp)
-                    startStatsCollection()
-                } else {
-                    Log.e(TAG, "Handshake failed after 10s")
-                    VpnConnectionManager.updateState(VpnState.ERROR)
-                    stopVpn()
+                if (!handshakeVerified) {
+                    error("WireGuard handshake not received")
                 }
-                
+
+                Log.i(TAG, "WireGuard tunnel handshake verified; validating public IP.")
+                val vpnIp = IpApiService.fetchCurrentIp()
+                require(vpnIp.isNotBlank() && vpnIp != "Unknown IP") {
+                    "Public IP verification failed"
+                }
+                Log.i(TAG, "Current IP after VPN: $vpnIp")
+
+                VpnConnectionManager.updateState(VpnState.CONNECTED, vpnIp)
+                startStatsCollection()
             } catch (e: Exception) {
                 Log.e(TAG, "Real WireGuard connection failed", e)
                 VpnConnectionManager.updateState(VpnState.ERROR)
@@ -161,19 +152,22 @@ class LanuVpnService : VpnService() {
     private fun stopVpn() {
         Log.i(TAG, "Stopping VPN Service...")
         statsJob?.cancel()
-        scope.launch {
-            try {
-                backend?.setState(tunnel, Tunnel.State.DOWN, null)
-            } catch (e: Exception) {
-                Log.e(TAG, "Error stopping tunnel", e)
-            }
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            stopSelf()
+        try {
+            backend?.setState(tunnel, Tunnel.State.DOWN, null)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error stopping tunnel", e)
         }
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
     }
 
     override fun onDestroy() {
-        stopVpn()
+        statsJob?.cancel()
+        try {
+            backend?.setState(tunnel, Tunnel.State.DOWN, null)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error stopping tunnel in onDestroy", e)
+        }
         super.onDestroy()
     }
 
