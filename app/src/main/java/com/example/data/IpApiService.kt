@@ -13,22 +13,16 @@ interface IpApi {
 
 object IpApiService {
   private val client = OkHttpClient.Builder().build()
-
-  private val retrofit =
-    Retrofit.Builder()
-      .baseUrl("https://api.ipify.org/")
-      .client(client)
-      .addConverterFactory(MoshiConverterFactory.create())
-      .build()
-
+  private val retrofit = Retrofit.Builder()
+    .baseUrl("https://api.ipify.org/")
+    .client(client)
+    .addConverterFactory(MoshiConverterFactory.create())
+    .build()
   val api: IpApi = retrofit.create(IpApi::class.java)
 
   suspend fun fetchCurrentIp(): String {
-    return try {
-      val response = api.getMyIp()
-      response.ip
-    } catch (e: Exception) {
-      "Unknown IP"
-    }
+    val response = api.getMyIp()
+    require(response.ip.isNotBlank()) { "Public IP response was empty" }
+    return response.ip
   }
 }
