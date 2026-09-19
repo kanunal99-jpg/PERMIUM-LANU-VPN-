@@ -95,12 +95,6 @@ class LanuVpnService : VpnService() {
 
         scope.launch {
             try {
-                if (backend == null) {
-                    Log.w(TAG, "Backend is NULL. Entering simulation mode for UI testing.")
-                    simulateConnection()
-                    return@launch
-                }
-
                 // 1. Build Config
                 val config = WireGuardConfigBuilder.build(
                     clientPrivateKey = privateKey,
@@ -114,13 +108,14 @@ class LanuVpnService : VpnService() {
                 backend?.setState(tunnel, Tunnel.State.UP, config)
                 
                 // 3. Verify Handshake / Connection
+                val peerKey = com.wireguard.crypto.Key.fromBase64(publicKey)
                 var handshakeVerified = false
-                for (i in 1..10) {
+                repeat(15) {
                     delay(1000)
-                    val stats = backend?.getStatistics(tunnel)
-                    if (stats != null && stats.totalRx() > 0) {
+                    val peerStats = backend?.getStatistics(tunnel)?.peer(peerKey)
+                    if (peerStats != null && peerStats.latestHandshakeEpochMillis > 0L) {
                         handshakeVerified = true
-                        break
+                        return@repeat
                     }
                 }
 
@@ -128,8 +123,9 @@ class LanuVpnService : VpnService() {
                     Log.i(TAG, "WireGuard Tunnel Handshake Success, verifying traffic...")
                     
                     // Real verification: Fetch IP through tunnel
-                    val vpnIp = try { IpApiService.fetchCurrentIp() } catch (e: Exception) { "Simulated-IP" }
-                    Log.i(TAG, "Current IP after VPN: $vpnIp")
+                    val vpnIp = IpApiService.fetchCurrentIp()
+                    require(vpnIp.isNotBlank() && vpnIp != "Unknown IP") { "Public IP verification failed" }
+                    Log.i(TAG, "Current IP after VPN: $vpnIp"
                     
                     VpnConnectionManager.updateState(VpnState.CONNECTED, vpnIp)
                     startStatsCollection()
@@ -140,29 +136,9 @@ class LanuVpnService : VpnService() {
                 }
                 
             } catch (e: Exception) {
-                Log.e(TAG, "Error starting VPN tunnel, falling back to simulation", e)
-                simulateConnection()
-            }
-        }
-    }
-
-    private suspend fun simulateConnection() {
-        VpnConnectionManager.updateState(VpnState.CONNECTING)
-        delay(1500)
-        VpnConnectionManager.updateState(VpnState.CONNECTED, "185.122.x.x (Simulated)")
-        startSimulatedStats()
-    }
-
-    private fun startSimulatedStats() {
-        statsJob?.cancel()
-        statsJob = scope.launch {
-            var rx = 0L
-            var tx = 0L
-            while (true) {
-                rx += (100..5000).random()
-                tx += (50..2000).random()
-                VpnConnectionManager.updateStats(rx, tx)
-                delay(1000)
+                Log.e(TAG, "Real WireGuard connection failed", e)
+                VpnConnectionManager.updateState(VpnState.ERROR)
+                stopVpn()
             }
         }
     }
