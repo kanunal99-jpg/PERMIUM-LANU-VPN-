@@ -5,41 +5,25 @@ import com.example.data.LanuDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+/**
+ * ICMP is deliberately not used as a WireGuard health signal.
+ * A server can block ICMP while accepting UDP/51820, and vice versa.
+ * The authoritative connection signal is the WireGuard peer handshake
+ * observed after the tunnel is brought UP.
+ */
 object ServerHealthChecker {
-
-  suspend fun checkAllServers(context: Context) {
-    withContext(Dispatchers.IO) {
-      try {
-        val database = LanuDatabase.getDatabase(context)
-        val dao = database.lanuDao()
-        val servers = dao.getAllServersList()
-
-        for (server in servers) {
-          val latency = IcmpPingUtility.ping(server.endpoint)
-          val status: String
-          val finalLatency: Int
-
-          if (latency >= 0) {
-            finalLatency = latency.toInt()
-            status = when {
-              finalLatency < 120 -> "ONLINE"
-              finalLatency < 300 -> "DEGRADED"
-              else -> "OFFLINE"
-            }
-          } else {
-            finalLatency = -1
-            status = "OFFLINE"
-          }
-
-          val updatedServer = server.copy(
-            status = status,
-            latency = finalLatency
-          )
-          dao.updateServer(updatedServer)
-        }
-      } catch (e: Exception) {
-        // Handle health check failure gracefully
-      }
+  suspend fun checkAllServers(context: Context) = withContext(Dispatchers.IO) {
+    val dao = LanuDatabase.getDatabase(context).lanuDao()
+    dao.getAllServersList().forEach { server ->
+      val usable = server.endpoint.isNotBlank() &&
+        server.publicKey.isNotBlank() &&
+        server.privateKey.isNotBlank() &&
+        !server.publicKey.contains("PASTE_") &&
+        !server.privateKey.contains("PASTE_")
+      dao.updateServer(server.copy(
+        status = if (usable) "READY_FOR_WIREGUARD" else "CONFIG_REQUIRED",
+        latency = -1
+      ))
     }
   }
 }
