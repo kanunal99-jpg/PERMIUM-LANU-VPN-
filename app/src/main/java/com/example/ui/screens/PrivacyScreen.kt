@@ -14,6 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+import androidx.compose.ui.res.stringResource
+import com.example.R
+
 @Composable
 fun PrivacyScreen(onBack: () -> Unit) {
   Column(
@@ -35,7 +38,7 @@ fun PrivacyScreen(onBack: () -> Unit) {
         }
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-          text = "Zero-Log Privacy Policy",
+          text = stringResource(R.string.privacy_policy_title),
           style = MaterialTheme.typography.titleLarge,
           fontWeight = FontWeight.Bold,
           color = MaterialTheme.colorScheme.onBackground
@@ -55,7 +58,7 @@ fun PrivacyScreen(onBack: () -> Unit) {
           Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
           Spacer(modifier = Modifier.width(12.dp))
           Text(
-            text = "Strict No-Logs Commitment",
+            text = stringResource(R.string.privacy_strict_title),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface
@@ -63,12 +66,7 @@ fun PrivacyScreen(onBack: () -> Unit) {
         }
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-          text =
-            "LANU VPN operates under a strict Zero-Log policy. We do not collect, store, or share any user browsing history, traffic destinations, DNS queries, or assigned IP addresses.\n\n" +
-              "• Traffic Logs: NEVER collected or stored.\n" +
-              "• DNS Requests: Resolved securely, never logged.\n" +
-              "• Connection Timestamps: Cleared immediately upon disconnection.\n" +
-              "• Bandwidth Analytics: Anonymous aggregated metrics only.",
+          text = stringResource(R.string.privacy_body),
           style = MaterialTheme.typography.bodyMedium,
           color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
         )

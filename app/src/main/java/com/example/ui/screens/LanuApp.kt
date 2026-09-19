@@ -15,13 +15,16 @@ import androidx.navigation.compose.rememberNavController
 import com.example.data.ServerEntity
 import com.example.data.VpnRepository
 
-sealed class Screen(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
-  object Home : Screen("home", "Home", Icons.Default.VpnKey)
-  object Servers : Screen("servers", "Servers", Icons.Default.Public)
-  object SpeedTest : Screen("speed_test", "Speed", Icons.Default.Speed)
-  object Settings : Screen("settings", "Settings", Icons.Default.Settings)
-  object Privacy : Screen("privacy", "Privacy", Icons.Default.Security)
-  object SplitTunneling : Screen("split_tunneling", "Split Tunneling", Icons.AutoMirrored.Filled.AltRoute)
+import androidx.compose.ui.res.stringResource
+import com.example.R
+
+sealed class Screen(val route: String, val titleResId: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
+  object Home : Screen("home", R.string.nav_home, Icons.Default.VpnKey)
+  object Servers : Screen("servers", R.string.nav_servers, Icons.Default.Public)
+  object SpeedTest : Screen("speed_test", R.string.nav_speed_test, Icons.Default.Speed)
+  object Settings : Screen("settings", R.string.nav_settings, Icons.Default.Settings)
+  object Privacy : Screen("privacy", R.string.nav_privacy, Icons.Default.Security)
+  object SplitTunneling : Screen("split_tunneling", R.string.nav_split_tunneling, Icons.AutoMirrored.Filled.AltRoute)
 }
 
 @Composable
@@ -46,9 +49,10 @@ fun LanuApp(
           tonalElevation = 8.dp
         ) {
           items.forEach { screen ->
+            val label = stringResource(screen.titleResId)
             NavigationBarItem(
-              icon = { Icon(screen.icon, contentDescription = screen.title) },
-              label = { Text(screen.title) },
+              icon = { Icon(screen.icon, contentDescription = label) },
+              label = { Text(label) },
               selected = currentRoute == screen.route,
               onClick = {
                 if (currentRoute != screen.route) {

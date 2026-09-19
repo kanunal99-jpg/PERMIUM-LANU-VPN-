@@ -1,9 +1,64 @@
 <resources>
     <string name="app_name">LanuVpn</string>
-    <string name="vpn_not_connected">Not Connected</string>
-    <string name="vpn_connecting">Connecting...</string>
-    <string name="vpn_connected">Connected</string>
-    <string name="vpn_reconnecting">Reconnecting...</string>
-    <string name="vpn_disconnecting">Disconnecting...</string>
-    <string name="vpn_error">Connection Error</string>
+    <string name="vpn_not_connected">Bağlı Değil</string>
+    <string name="vpn_connecting">Bağlanıyor...</string>
+    <string name="vpn_connected">Bağlı</string>
+    <string name="vpn_reconnecting">Yeniden Bağlanıyor...</string>
+    <string name="vpn_disconnecting">Bağlantı Kesiliyor...</string>
+    <string name="vpn_error">Bağlantı Hatası</string>
+    
+    <string name="tap_to_connect">BAĞLANMAK İÇİN DOKUNUN</string>
+    <string name="status_connected">BAĞLI</string>
+    <string name="status_connecting">BAĞLANIYOR...</string>
+    <string name="status_error">HATA</string>
+    <string name="public_ip">GENEL IP</string>
+    <string name="zero_logs">SIFIR KAYIT</string>
+    <string name="status_protected">Korumalı</string>
+    <string name="latency_label">Gecikme</string>
+    <string name="action_disconnect">BAĞLANTIYI KES</string>
+    <string name="action_connect_now">ŞİMDİ BAĞLAN</string>
+    <string name="nav_settings">Ayarlar</string>
+    <string name="nav_home">Ana Sayfa</string>
+    <string name="nav_servers">Sunucular</string>
+    <string name="nav_privacy">Gizlilik</string>
+    <string name="nav_speed_test">Hız Testi</string>
+    <string name="nav_split_tunneling">Bölünmüş Tünel</string>
+    <string name="split_tunneling_subtitle">Uygulamaları VPN tünelinden hariç tut</string>
+    
+    <string name="settings_title">Ayarlar ve Güvenlik</string>
+    <string name="auto_connect_title">Başlangıçta Otomatik Bağlan</string>
+    <string name="auto_connect_subtitle">Uygulama açılışında otomatik güvenli tünel oluştur</string>
+    <string name="kill_switch_title">Acil Durum Anahtarı (Kill Switch)</string>
+    <string name="kill_switch_subtitle">VPN kesildiğinde interneti engelle</string>
+    <string name="auto_reconnect_title">Otomatik Yeniden Bağlan</string>
+    <string name="auto_reconnect_subtitle">Ağ değişikliklerinde otomatik yeniden bağlan</string>
+    <string name="dns_protection_title">DNS Sızıntı Koruması</string>
+    <string name="dns_protection_subtitle">Tüm DNS sorgularını güvenli sunucular üzerinden yönlendir</string>
+    <string name="ipv6_protection_title">IPv6 Sızıntı Koruması</string>
+    <string name="ipv6_protection_subtitle">Tünel dışındaki IPv6 trafiğini engelle</string>
+    <string name="dark_mode_title">Karanlık Mod</string>
+    <string name="dark_mode_subtitle">Lüks karanlık siber güvenlik temasını etkinleştir</string>
+    <string name="privacy_policy_title">Sıfır Kayıt Gizlilik Politikası</string>
+    <string name="privacy_policy_subtitle">Kesin kayıt tutmama taahhüdümüzü okuyun</string>
+    
+    <string name="servers_title">Küresel Sunucular ve Ping</string>
+    <string name="search_placeholder">Ülke veya şehir ara...</string>
+    <string name="auto_connect_fastest">En Hızlı Sunucuya Otomatik Bağlan</string>
+    <string name="status_online">ÇEVRİMİÇİ</string>
+    <string name="status_degraded">KISITLI</string>
+    <string name="status_offline">ÇEVRİMDIŞI</string>
+    <string name="refresh_ping">Ping Yenile</string>
+    <string name="preview_mode_warning">Ön İzleme Modu: Gerçek VPN motoru bu ortamda çalışmıyor. UI simülasyonu etkin.</string>
+    
+    <string name="privacy_strict_title">Kesin Kayıt Tutmama Taahhüdü</string>
+    <string name="privacy_body">LANU VPN, katı bir Sıfır Kayıt politikası altında çalışır. Kullanıcı tarama geçmişini, trafik hedeflerini, DNS sorgularını veya atanan IP adreslerini toplamaz, saklamaz veya paylaşmayız.\n\n• Trafik Kayıtları: ASLA toplanmaz veya saklanmaz.\n• DNS İstekleri: Güvenli bir şekilde çözülür, asla kaydedilmez.\n• Bağlantı Zaman Damgaları: Bağlantı kesildiğinde hemen temizlenir.\n• Bant Genişliği Analitiği: Yalnızca anonimleştirilmiş toplu metrikler.</string>
+    
+    <string name="speed_test_title">VPN Hız Karşılaştırması</string>
+    <string name="measuring_bandwidth">Bant Genişliği Ölçülüyor...</string>
+    <string name="download_speed_label">Şifreli Tünel Üzerinden İndirme Hızı</string>
+    <string name="upload_label">YÜKLEME</string>
+    <string name="ping_label">PİNG</string>
+    <string name="start_speed_test">HIZ TESTİNİ BAŞLAT</string>
+    <string name="testing_label">Test Ediliyor...</string>
+    <string name="search_apps_placeholder">Uygulama ara...</string>
 </resources>

@@ -19,6 +19,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.ServerEntity
 
+import androidx.compose.ui.res.stringResource
+import com.example.R
+
 @Composable
 fun ServerListScreen(
   servers: List<ServerEntity>,
@@ -56,7 +59,7 @@ fun ServerListScreen(
         }
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-          text = "Global Servers & Ping",
+          text = stringResource(R.string.servers_title),
           style = MaterialTheme.typography.titleLarge,
           fontWeight = FontWeight.Bold,
           color = MaterialTheme.colorScheme.onBackground
@@ -69,7 +72,7 @@ fun ServerListScreen(
         }) {
           Icon(
             imageVector = Icons.Default.Refresh,
-            contentDescription = "Refresh Ping",
+            contentDescription = stringResource(R.string.refresh_ping),
             tint = MaterialTheme.colorScheme.primary
           )
         }
@@ -90,7 +93,7 @@ fun ServerListScreen(
       value = searchQuery,
       onValueChange = { searchQuery = it },
       modifier = Modifier.fillMaxWidth(),
-      placeholder = { Text("Search country or city...") },
+      placeholder = { Text(stringResource(R.string.search_placeholder)) },
       leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
       shape = RoundedCornerShape(12.dp),
       singleLine = true,
@@ -117,7 +120,7 @@ fun ServerListScreen(
     ) {
       Icon(Icons.Default.FlashOn, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
       Spacer(modifier = Modifier.width(8.dp))
-      Text("Auto-Connect Fastest Server", color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold)
+      Text(stringResource(R.string.auto_connect_fastest), color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold)
     }
 
     Spacer(modifier = Modifier.height(16.dp))
@@ -189,6 +192,12 @@ fun ServerListScreen(
                   else -> Color(0xFFD32F2F)
                 }
 
+                val statusText = when (server.status.uppercase()) {
+                  "ONLINE" -> stringResource(R.string.status_online)
+                  "DEGRADED" -> stringResource(R.string.status_degraded)
+                  else -> stringResource(R.string.status_offline)
+                }
+
                 Text(
                   text = "${server.latency} ms",
                   style = MaterialTheme.typography.bodyMedium,
@@ -201,7 +210,7 @@ fun ServerListScreen(
                   color = statusColor.copy(alpha = 0.15f)
                 ) {
                   Text(
-                    text = server.status,
+                    text = statusText,
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,

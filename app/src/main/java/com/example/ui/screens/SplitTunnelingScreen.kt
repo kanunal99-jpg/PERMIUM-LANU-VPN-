@@ -23,6 +23,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+import androidx.compose.ui.res.stringResource
+import com.example.R
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SplitTunnelingScreen(
@@ -56,7 +59,7 @@ fun SplitTunnelingScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Split Tunneling") },
+                title = { Text(stringResource(R.string.nav_split_tunneling)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -72,7 +75,7 @@ fun SplitTunnelingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                placeholder = { Text("Search apps...") },
+                placeholder = { Text(stringResource(R.string.search_apps_placeholder)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 singleLine = true
             )

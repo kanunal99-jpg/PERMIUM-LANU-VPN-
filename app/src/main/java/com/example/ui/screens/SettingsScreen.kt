@@ -19,6 +19,9 @@ import com.example.manager.AutoConnectManager
 import com.example.manager.KillSwitchManager
 import kotlinx.coroutines.launch
 
+import androidx.compose.ui.res.stringResource
+import com.example.R
+
 @Composable
 fun SettingsScreen(
   onNavigateToPrivacy: () -> Unit,
@@ -58,7 +61,7 @@ fun SettingsScreen(
         }
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-          text = "Settings & Security",
+          text = stringResource(R.string.settings_title),
           style = MaterialTheme.typography.titleLarge,
           fontWeight = FontWeight.Bold,
           color = MaterialTheme.colorScheme.onBackground
@@ -71,8 +74,8 @@ fun SettingsScreen(
     LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
       item {
         SettingToggleItem(
-          title = "Auto-Connect on Launch",
-          subtitle = "Automatically establish secure tunnel on app startup",
+          title = stringResource(R.string.auto_connect_title),
+          subtitle = stringResource(R.string.auto_connect_subtitle),
           checked = autoConnect,
           onCheckedChange = { enabled ->
             scope.launch {
@@ -84,8 +87,8 @@ fun SettingsScreen(
       }
       item {
         SettingToggleItem(
-          title = "Kill Switch",
-          subtitle = "Block internet when VPN disconnects",
+          title = stringResource(R.string.kill_switch_title),
+          subtitle = stringResource(R.string.kill_switch_subtitle),
           checked = killSwitch,
           onCheckedChange = { enabled ->
             scope.launch {
@@ -97,8 +100,8 @@ fun SettingsScreen(
       }
       item {
         SettingToggleItem(
-          title = "Auto Reconnect",
-          subtitle = "Automatically reconnect on network changes",
+          title = stringResource(R.string.auto_reconnect_title),
+          subtitle = stringResource(R.string.auto_reconnect_subtitle),
           checked = autoReconnect,
           onCheckedChange = { autoReconnect = it },
           icon = Icons.Default.Sync
@@ -106,8 +109,8 @@ fun SettingsScreen(
       }
       item {
         SettingToggleItem(
-          title = "DNS Leak Protection",
-          subtitle = "Route all DNS queries through secure resolvers",
+          title = stringResource(R.string.dns_protection_title),
+          subtitle = stringResource(R.string.dns_protection_subtitle),
           checked = dnsProtection,
           onCheckedChange = { dnsProtection = it },
           icon = Icons.Default.Public
@@ -115,8 +118,8 @@ fun SettingsScreen(
       }
       item {
         SettingToggleItem(
-          title = "IPv6 Leak Protection",
-          subtitle = "Prevent IPv6 traffic leakage outside tunnel",
+          title = stringResource(R.string.ipv6_protection_title),
+          subtitle = stringResource(R.string.ipv6_protection_subtitle),
           checked = ipv6Protection,
           onCheckedChange = { ipv6Protection = it },
           icon = Icons.Default.Lock
@@ -124,8 +127,8 @@ fun SettingsScreen(
       }
       item {
         SettingToggleItem(
-          title = "Dark Mode",
-          subtitle = "Enable luxury dark cyber-secure theme",
+          title = stringResource(R.string.dark_mode_title),
+          subtitle = stringResource(R.string.dark_mode_subtitle),
           checked = darkMode,
           onCheckedChange = { darkMode = it },
           icon = Icons.Default.DarkMode
@@ -146,8 +149,8 @@ fun SettingsScreen(
               Icon(Icons.AutoMirrored.Filled.AltRoute, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
               Spacer(modifier = Modifier.width(16.dp))
               Column {
-                Text(text = "Split Tunneling", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                Text(text = "Exclude apps from the VPN tunnel", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+                Text(text = stringResource(R.string.nav_split_tunneling), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                Text(text = stringResource(R.string.split_tunneling_subtitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
               }
             }
             Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
@@ -169,8 +172,8 @@ fun SettingsScreen(
               Icon(Icons.Default.PrivacyTip, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
               Spacer(modifier = Modifier.width(16.dp))
               Column {
-                Text(text = "Zero-Log Privacy Policy", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                Text(text = "Read our strict non-logging commitment", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+                Text(text = stringResource(R.string.privacy_policy_title), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                Text(text = stringResource(R.string.privacy_policy_subtitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
               }
             }
             Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline)

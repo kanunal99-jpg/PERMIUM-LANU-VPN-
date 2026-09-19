@@ -16,6 +16,9 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+import androidx.compose.ui.res.stringResource
+import com.example.R
+
 @Composable
 fun SpeedTestScreen(onBack: () -> Unit) {
   var isTesting by remember { mutableStateOf(false) }
@@ -66,7 +69,7 @@ fun SpeedTestScreen(onBack: () -> Unit) {
         }
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-          text = "VPN Speed Benchmark",
+          text = stringResource(R.string.speed_test_title),
           style = MaterialTheme.typography.titleLarge,
           fontWeight = FontWeight.Bold,
           color = MaterialTheme.colorScheme.onBackground
@@ -90,13 +93,13 @@ fun SpeedTestScreen(onBack: () -> Unit) {
         Icon(Icons.Default.Speed, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp))
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-          text = if (isTesting) "Measuring Bandwidth..." else "${String.format("%.1f", downloadSpeed)} Mbps",
+          text = if (isTesting) stringResource(R.string.measuring_bandwidth) else "${String.format("%.1f", downloadSpeed)} Mbps",
           style = MaterialTheme.typography.headlineLarge,
           fontWeight = FontWeight.Bold,
           color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-          text = "Download Speed via Encrypted Tunnel",
+          text = stringResource(R.string.download_speed_label),
           style = MaterialTheme.typography.bodySmall,
           color = MaterialTheme.colorScheme.outline
         )
@@ -113,7 +116,7 @@ fun SpeedTestScreen(onBack: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
       ) {
         Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-          Text("UPLOAD", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+          Text(stringResource(R.string.upload_label), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
           Spacer(modifier = Modifier.height(4.dp))
           Text(
             text = "${String.format("%.1f", uploadSpeed)} Mbps",
@@ -129,7 +132,7 @@ fun SpeedTestScreen(onBack: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
       ) {
         Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-          Text("PING", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+          Text(stringResource(R.string.ping_label), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
           Spacer(modifier = Modifier.height(4.dp))
           Text(
             text = "$pingMs ms",
@@ -151,7 +154,7 @@ fun SpeedTestScreen(onBack: () -> Unit) {
       colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
     ) {
       Text(
-        text = if (isTesting) "Testing..." else "START SPEED TEST",
+        text = if (isTesting) stringResource(R.string.testing_label) else stringResource(R.string.start_speed_test),
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.background

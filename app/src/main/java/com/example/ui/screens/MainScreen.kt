@@ -34,6 +34,9 @@ import com.example.manager.VpnStateManager
 import androidx.compose.runtime.collectAsState
 import com.example.manager.VpnStateManager.VpnStatus
 
+import androidx.compose.ui.res.stringResource
+import com.example.R
+
 @Composable
 fun MainScreen(
   selectedServer: ServerEntity?,
@@ -79,14 +82,14 @@ fun MainScreen(
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-          text = "LANU VPN",
+          text = stringResource(R.string.app_name),
           style = MaterialTheme.typography.titleLarge,
           fontWeight = FontWeight.Bold,
           color = MaterialTheme.colorScheme.onBackground
         )
       }
       IconButton(onClick = onNavigateToSettings) {
-        Icon(Icons.Default.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onBackground)
+        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.nav_settings), tint = MaterialTheme.colorScheme.onBackground)
       }
     }
 
@@ -121,7 +124,7 @@ fun MainScreen(
               color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-              text = "Latency: ${selectedServer?.latency ?: 24} ms • ${selectedServer?.protocol ?: "WireGuard"}",
+              text = "${stringResource(R.string.latency_label)}: ${selectedServer?.latency ?: 24} ms • ${selectedServer?.protocol ?: "WireGuard"}",
               style = MaterialTheme.typography.bodySmall,
               color = MaterialTheme.colorScheme.outline
             )
@@ -182,10 +185,10 @@ fun MainScreen(
         Text(
           text =
             when (vpnStatus) {
-              VpnStatus.CONNECTED -> "CONNECTED"
-              VpnStatus.CONNECTING -> "CONNECTING..."
-              VpnStatus.ERROR -> "ERROR"
-              else -> "TAP TO CONNECT"
+              VpnStatus.CONNECTED -> stringResource(R.string.status_connected)
+              VpnStatus.CONNECTING -> stringResource(R.string.status_connecting)
+              VpnStatus.ERROR -> stringResource(R.string.status_error)
+              else -> stringResource(R.string.tap_to_connect)
             },
           style = MaterialTheme.typography.titleMedium,
           fontWeight = FontWeight.Bold,
@@ -211,14 +214,14 @@ fun MainScreen(
     ) {
       StatCard(
         modifier = Modifier.weight(1f),
-        title = "PUBLIC IP",
+        title = stringResource(R.string.public_ip),
         value = stats.currentIp,
         icon = Icons.Default.NetworkCheck
       )
       StatCard(
         modifier = Modifier.weight(1f),
-        title = "ZERO-LOGS",
-        value = "Protected",
+        title = stringResource(R.string.zero_logs),
+        value = stringResource(R.string.status_protected),
         icon = Icons.Default.VerifiedUser
       )
     }
@@ -249,7 +252,7 @@ fun MainScreen(
         )
     ) {
       Text(
-        text = if (vpnStatus == VpnStatus.CONNECTED) "DISCONNECT" else "CONNECT NOW",
+        text = if (vpnStatus == VpnStatus.CONNECTED) stringResource(R.string.action_disconnect) else stringResource(R.string.action_connect_now),
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
         color = if (vpnStatus == VpnStatus.CONNECTED) Color.White else MaterialTheme.colorScheme.background
