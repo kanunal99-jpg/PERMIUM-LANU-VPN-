@@ -21,6 +21,7 @@ import androidx.work.WorkManager
 import androidx.work.ExistingPeriodicWorkPolicy
 import java.util.concurrent.TimeUnit
 import com.example.worker.ServerPingWorker
+import com.example.util.ServerHealthChecker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -91,7 +92,7 @@ class MainActivity : ComponentActivity() {
           },
           onRefreshLatency = {
             scope.launch {
-              repository.refreshServerHealth(applicationContext)
+              ServerHealthChecker.checkAllServers(applicationContext)
             }
           }
         )
