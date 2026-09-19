@@ -11,6 +11,8 @@ import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.MainActivity
+import com.example.manager.VpnConnectionManager
+import com.example.manager.VpnState
 import com.example.data.IpApiService
 import com.example.data.LanuDatabase
 import com.example.data.VpnRepository
